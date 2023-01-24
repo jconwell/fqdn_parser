@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+requests = "*"
+bs4 = "*"
+fqdn_parser = {editable = true, path = "."}
+idna = "*"
+unidecode = "*"
+tranco = "*"
+
+[dev-packages]
+tox = "*"
+sphinx = "*"
+pytest = "*"
+pytest-cov = "*"
+
+[requires]
+python_version = "3.7"
