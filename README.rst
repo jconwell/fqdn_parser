@@ -9,7 +9,7 @@ FQDN Parser
 Install
 -------
 
-Latest release on Pypi
+To install the release on Pypi (coming soon)
 
 :code:`pip install fqdn-parser`
 
@@ -87,9 +87,7 @@ machine learning projects, including:
 - The TLD type: generic, generic-restricted, country-code, sponsored, test, infrastructure, and host_suffix (.onion)
 - The date the TLD was registered by ICANN
 - In the case of multi-label effective TLDs, is it public (owned by a Registrar) or private (owned by a private company)
-- If the TLD (or any label in the FQDN) is puny code encoded, the ascii'ification of the unicode. This can be useful for
-identifying registrable domains that using unicode characters that are very similar to the ascii character used by
-legitimate domains, a common phishing technique.
+- If the TLD (or any label in the FQDN) is puny code encoded, the ascii'ification of the unicode. This can be useful for identifying registrable domains that using unicode characters that are very similar to the ascii character used by legitimate domains, a common phishing technique.
 
 -----
 Usage
@@ -110,5 +108,4 @@ TO DO List
 - A lot of the suffixes listed in https://publicsuffix.org/list/public_suffix_list.dat are not actually
   recognized TLDs, but are suffixes used for Dynamic DNS (https://en.wikipedia.org/wiki/Dynamic_DNS).
   At some point I'd like parse that information and to pull out Dynamic DNS suffixes from actual TLDs.
-
 - Probably more unit tests
