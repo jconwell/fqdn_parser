@@ -1,4 +1,3 @@
-
 ===========
 FQDN Parser
 ===========
@@ -33,6 +32,12 @@ The first time fqdn_parser is run, it will perform two http calls to the links a
 Public Suffix List information. This may take a few seconds to pull the data down, parse, and persist into a cache file.
 Subsequent calls to fqdn_parser will use the existing cache file and be much faster. The cache file can be managed via
 arguments to the :code:`Suffixes` class constructor.
+
+Note: As of the last commit there are 9 country code TLDs listed in the Mozilla Public Suffix List that are `not` listed
+in the IANA Root Zone Database for some reason. These TLDs are added to the parsing cache file, but you will see a
+warning for each TLD
+
+    :code:`WARNING: 澳门 not in IANA root zone database. Adding to list of TLDs`
 
 -----------
 Terminology
