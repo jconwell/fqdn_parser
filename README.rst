@@ -1,13 +1,13 @@
 
-===============
+===========
 FQDN Parser
-===============
+===========
 
 *Note: the API is still being fleshed out and subject to change*
 
-----
+--------
 Overview
-----
+--------
 
 FQDN Parser (Fully Qualified Domain Name Parser) is a library used to (surprise!) parse FQDNs into their component parts,
 including subdomains, domain names, and the `public suffix <https://publicsuffix.org/list/public_suffix_list.dat>`_.
@@ -79,18 +79,18 @@ To give a concrete example of these names, take the FQDN :code:`test.integration
 
     :code:`pqdn` - test.integration.api
 
-------------------------------------------------
+----------------------------------------------------------------
 Doesn't tldextract do this for me? How is fqdn_parser different?
-------------------------------------------------
+----------------------------------------------------------------
 
 `tldextract <https://github.com/john-kurkowski/tldextract>`_ is a great library if all you need to do
 is to parse a FQDN to get it's subdomain, domain, or full suffix.
 
 But fqdn_parser adds a bit more contextual metadata about each TLD/suffix, as well as supports punycoded labels within FQDNs
 
------
+--------------
 Usage Examples
------
+--------------
 
 Parse the registrable domain host from a FQDN:
 
