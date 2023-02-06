@@ -153,7 +153,21 @@ class Suffixes:
             return node.suffix
         return None
 
-    def parse(self, fqdn, skip_ip_check=False, skip_protocol_check=True):
+    def parse(self, fqdn, skip_ip_check=False, skip_protocol_check=False):
+        """ Parse a fqdn or url and return a ParsedResult object
+
+        Args:
+            fqdn (string): the fqdn or url to be parsed
+            skip_ip_check (bool): True to skip checking if fqdn contains an IP address
+            skip_protocol_check (bool): True to skip check for `protocol://` at the beginning of the fqdn. If False
+            and the fqdn includes a protocol, the protocol string will be interpreted as a subdomain.
+
+        Returns: ParseResult
+
+        Notes: When parsing a list of FQDNs and you know the list does not include any
+        IP addresses or protocol strings, set skip_ip_check=True and skip_protocol_check=True for improved
+        processing speed
+        """
         fqdn = fqdn.lower()
         if not skip_ip_check:
             if ipv4_pattern.match(fqdn):
