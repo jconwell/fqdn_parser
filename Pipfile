@@ -6,10 +6,11 @@ name = "pypi"
 [packages]
 requests = "*"
 bs4 = "*"
-fqdn_parser = {editable = true, path = "."}
+#fqdn_parser = {editable = true, path = "."}
 idna = "*"
 unidecode = "*"
 tranco = "*"
+pandas = "*"
 
 [dev-packages]
 tox = "*"

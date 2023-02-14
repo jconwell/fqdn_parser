@@ -3,7 +3,7 @@ import logging
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
-from fqdn_parser.trie import _Trie, _TLDInfo
+from fqdn_parser.utils.trie import Trie, TLDInfo
 
 _logger = logging.getLogger(__name__)
 
@@ -26,10 +26,9 @@ def build_suffixes():
     # create a punycode suffix reverse index
     _puny_suffixes = {}
     root_tlds = _suffix_trie.root.children
-    for tld in root_tlds:
-        tld_node = root_tlds[tld].metadata
+    for tld_node in root_tlds.values():
         if tld_node.puny:
-            _puny_suffixes[tld_node.puny] = tld_node.suffix
+            _puny_suffixes[tld_node.puny] = tld_node.label
     return _suffix_trie, _puny_suffixes
 
 
@@ -55,7 +54,7 @@ def _load_all_tlds(tld_create_dates):
     type and the registry information so I have to parse the html to get the info.
     Yup, totally know this is brittle.
     """
-    trie = _Trie()
+    trie = Trie()
     revoked_tld = "Not assigned"
     # regex for the IANA URL for idn TLDs
     PUNY_TLD_PATTERN = "^\/domains\/root\/db\/xn--(.+?)\.html"
@@ -91,7 +90,8 @@ def _load_all_tlds(tld_create_dates):
             if tld_reg_date is None:
                 _logger.warning(f"Registration date not found for TLD '{tld}' ")
             # populate tld info
-            trie.insert(tld, _TLDInfo(tld, puny_tld, tld_type, registry, tld_reg_date))
+            node = TLDInfo(tld, puny_tld, tld_type, registry, tld_reg_date)
+            trie.insert_tld_node(node)
     return trie
 
 
@@ -99,15 +99,15 @@ def _load_manual_tlds(_suffix_trie):
     """ Add in any extra TLDs manually """
     # add in the onion TLD manually
     tld = "onion"
-    _suffix_trie.insert(tld,
-        _TLDInfo(tld, None, "host_suffix", "Tor", datetime.strptime("2015-09-15", '%Y-%m-%d').date()))
+    node = TLDInfo(tld, None, "host_suffix", "Tor", datetime.strptime("2015-09-15", '%Y-%m-%d').date())
+    _suffix_trie.insert_tld_node(node)
 
 
 def _enrich_tld_suffixes(_suffix_trie):
     """ Pull in all known public suffixes
-    TODO: A lot of these are know considered multi label TLDs, like "co.uk", but instead are suffixes used
+    TODO: A lot of these are not considered multi label TLDs, like "co.uk", but instead are suffixes used
           by dynamic DNS providers. I need to figure out a way to differentiate the two and add dynamic dns
-          as extra metadata on a suffix.
+          as property on a suffix.
     """
     response = requests.get(SUFFIX_LIST_URL)
     if response.status_code != 200:
@@ -116,11 +116,11 @@ def _enrich_tld_suffixes(_suffix_trie):
     suffix_list = suffix_list.split("\n")
 
     # add each sub suffix to its parent TLD
-    is_public_suffix = True
+    is_private_suffix = False
     for i, line in enumerate(suffix_list):
         if line == "// ===BEGIN PRIVATE DOMAINS===":
             # set flag and continue
-            is_public_suffix = False
+            is_private_suffix = True
             continue
         elif len(line) == 0 or line[:3] == "// ":
             # skip comments
@@ -130,19 +130,20 @@ def _enrich_tld_suffixes(_suffix_trie):
         if suffix[:2] == "*." or suffix[:2] == "!.":
             suffix = suffix[2:]
         if "." in suffix:
-            # check for puny tld
+            # todo: check for puny tld
             # tld = suffix[suffix.rindex(".") + 1:]
             # add suffix to trie tree
-            _suffix_trie.insert(suffix, is_public_suffix=is_public_suffix)
+            _suffix_trie.insert_suffix_node(suffix, is_private_suffix)
         else:
             # There are 9 IDN TLDs in the suffix list that are NOT listed in the iana root zone database
             # - so adding them here (they are all country code IDN TLDs)
             if _suffix_trie.get_node([suffix]) is None:
-                print(f"WARNING: {suffix} not in IANA root zone database. Adding to list of TLDs")
+                print(f"WARNING: Suffix '{suffix}' found in Public Suffix List is not in IANA root zone database. Manually adding suffix to list of root TLDs")
                 # parse out the puny code from the previous line if possible
                 previous_line = suffix_list[i - 1]
                 puny = None
                 if "// xn--" in previous_line:
                     puny = previous_line[3:]
                     puny = puny[:puny.index(" ")]
-                _suffix_trie.insert(suffix, _TLDInfo(suffix, puny, "country-code", None, None))
+                node = TLDInfo(suffix, puny, "country-code", None, None)
+                _suffix_trie.insert_tld_node(node)
