@@ -163,9 +163,9 @@ To install via Pypi
 
 :code:`pip install fqdn-parser`
 
-----------
+---------------
 To Do Wish List
-----------
+---------------
 
 - A lot of the suffixes listed in https://publicsuffix.org/list/public_suffix_list.dat are not actually
   recognized TLDs, but are suffixes used for Dynamic DNS (https://en.wikipedia.org/wiki/Dynamic_DNS).

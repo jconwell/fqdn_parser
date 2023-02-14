@@ -11,7 +11,7 @@ Version 2.0
 ===========
 
 Changes To How "private suffixes" Are Handled
-------------------------------------------
+---------------------------------------------
 
 The "Public Suffix List" (https://publicsuffix.org/list/public_suffix_list.dat) lists all known
 public domain suffixes, including both single and multi-label TLDs (.com vs .co.uk).
