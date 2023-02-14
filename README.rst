@@ -2,16 +2,14 @@
 FQDN Parser
 ===========
 
-*Note: the API is still being fleshed out and subject to change*
-
 --------
 Overview
 --------
 
-FQDN Parser (Fully Qualified Domain Name Parser) is a library used to (surprise!) parse FQDNs into their component parts,
+FQDN Parser (Fully Qualified Domain Name Parser) is a library used to (surprise) parse FQDNs into their component parts,
 including subdomains, domain names, and the `public suffix <https://publicsuffix.org/list/public_suffix_list.dat>`_.
 
-It also provides additional contextual metadata about the domain's publix suffix including:
+It also provides additional contextual metadata about the domain's TLD including:
 
 - International TLDs in both unicode and puny code format
 - The TLD type: generic, generic-restricted, country-code, sponsored, test, infrastructure, and host_suffix (.onion)
@@ -19,7 +17,7 @@ It also provides additional contextual metadata about the domain's publix suffix
 - In the case of multi-label effective TLDs, is it public like :code:`.co.uk` which is owned by a Registrar or private like :code:`.duckdns.org` which is owned by a private company
 - If the TLD (or any label in the FQDN) is puny code encoded, the ascii'ification of the unicode. This can be useful for identifying registrable domains that use unicode characters that are very similar to ascii characters used by legitimate domains, a common phishing technique.
 
-The suffix metadata can be used as contextual features for machine learning models that generate predictions about domain names and FQDNs.
+The TLD metadata can be used as contextual features for machine learning models that generate predictions about domain names and FQDNs.
 
 ---------------------------------
 Data sources used by FQDN Parser:
@@ -107,6 +105,56 @@ Parse the registrable domain host from a FQDN:
     result = suffixes.parse(fqdn)
     print(result.registrable_domain_host)
 
+----------------
+Private Suffixes
+----------------
+
+The "Public Suffix List" (https://publicsuffix.org/list/public_suffix_list.dat) lists all known
+public domain suffixes, including both single and multi-label TLDs (.com vs .co.uk).
+
+It also has a section of "Private Suffixes". These are not considered TLDs, but instead are
+domain names privately owned by companies that people can get subdomains under. A good example
+of this are Dynamic DNS companies. For example, ``duckdns.org`` is a Dynamic DNS provider and you
+can register subdomains under ``duckdns.org``.
+
+Private Suffixes can be identified by inspecting the :code:`ParsedResult.private_suffix` property.
+
+Example:
+
+``api.fake_aws_login.duckdns.org``
+
+    :code:`tld` - org
+
+    :code:`effective_tld` - org
+
+    :code:`registrable_domain` - duckdns.org
+
+    :code:`registrable_domain_host` - duckdns
+
+    :code:`private_suffix` - duckdns.org
+
+    :code:`fqdn` - api.fake_aws_login.duckdns.org
+
+    :code:`pqdn` - api.fake_aws_login
+
+A more complex example, using the private suffix ``cdn.prod.atlassian-dev.net``
+
+``assets.some_company.cdn.prod.atlassian-dev.net``
+
+    :code:`tld` - net
+
+    :code:`effective_tld` - net
+
+    :code:`registrable_domain` - atlassian-dev.net
+
+    :code:`registrable_domain_host` - atlassian-dev
+
+    :code:`private_suffix` - cdn.prod.atlassian-dev.net
+
+    :code:`fqdn` - assets.some_company.cdn.prod.atlassian-dev.net
+
+    :code:`pqdn` - assets.some_company
+
 -------
 Install
 -------
@@ -116,10 +164,9 @@ To install via Pypi
 :code:`pip install fqdn-parser`
 
 ----------
-To Do List
+To Do Wish List
 ----------
 
 - A lot of the suffixes listed in https://publicsuffix.org/list/public_suffix_list.dat are not actually
   recognized TLDs, but are suffixes used for Dynamic DNS (https://en.wikipedia.org/wiki/Dynamic_DNS).
   At some point I'd like parse that information and to pull out Dynamic DNS suffixes from actual TLDs.
-- Probably more unit tests
