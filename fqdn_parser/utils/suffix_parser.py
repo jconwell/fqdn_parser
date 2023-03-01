@@ -3,7 +3,7 @@ import logging
 import requests
 from datetime import datetime
 from bs4 import BeautifulSoup
-from fqdn_parser.utils.trie import Trie, TLDInfo
+from fqdn_parser.utils.trie import Trie
 
 _logger = logging.getLogger(__name__)
 
@@ -90,20 +90,18 @@ def _load_all_tlds(tld_create_dates):
             if tld_reg_date is None:
                 _logger.warning(f"Registration date not found for TLD '{tld}' ")
             # populate tld info
-            node = TLDInfo(tld, puny_tld, tld_type, registry, tld_reg_date)
-            trie.insert_tld_node(node)
+            trie.insert_tld_node(tld, puny_tld, tld_type, registry, tld_reg_date)
     return trie
 
 
-def _load_manual_tlds(_suffix_trie):
+def _load_manual_tlds(_suffix_trie: Trie):
     """ Add in any extra TLDs manually """
     # add in the onion TLD manually
     tld = "onion"
-    node = TLDInfo(tld, None, "host_suffix", "Tor", datetime.strptime("2015-09-15", '%Y-%m-%d').date())
-    _suffix_trie.insert_tld_node(node)
+    _suffix_trie.insert_tld_node(tld, None, "host_suffix", "Tor", datetime.strptime("2015-09-15", '%Y-%m-%d').date())
 
 
-def _enrich_tld_suffixes(_suffix_trie):
+def _enrich_tld_suffixes(_suffix_trie: Trie):
     """ Pull in all known public suffixes
     TODO: A lot of these are not considered multi label TLDs, like "co.uk", but instead are suffixes used
           by dynamic DNS providers. I need to figure out a way to differentiate the two and add dynamic dns
@@ -145,5 +143,4 @@ def _enrich_tld_suffixes(_suffix_trie):
                 if "// xn--" in previous_line:
                     puny = previous_line[3:]
                     puny = puny[:puny.index(" ")]
-                node = TLDInfo(suffix, puny, "country-code", None, None)
-                _suffix_trie.insert_tld_node(node)
+                _suffix_trie.insert_tld_node(suffix, puny, "country-code", None, None)

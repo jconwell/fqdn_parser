@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 
 from fqdn_parser.utils.suffix_parser import build_suffixes
-from fqdn_parser.utils.trie import save_trie, load_trie, SuffixInfo, TLDInfo
+from fqdn_parser.utils.trie import save_trie, load_trie
 from utils.ascii_ify import ascii_ify_puny
 
 __author__ = "John Conwell"
@@ -54,10 +54,7 @@ class ParsedResult:
     @property
     def registrable_domain(self) -> Optional[str]:
         if self.is_fqdn:
-            if self.private_suffix:
-                return f"{self.host_labels[-1]}.{self.private_suffix}"
-            else:
-                return f"{self.host_labels[-1]}.{self.effective_tld}"
+            return f"{self.host_labels[-1]}.{self.effective_tld}"
         return None
 
     @property
@@ -69,10 +66,7 @@ class ParsedResult:
     @property
     def fqdn(self) -> str:
         if self.is_fqdn:
-            if self.private_suffix:
-                return f"{'.'.join(self.host_labels)}.{self.private_suffix}"
-            else:
-                return f"{'.'.join(self.host_labels)}.{self.effective_tld}"
+            return f"{'.'.join(self.host_labels)}.{self.effective_tld}"
         # just return the IP address
         return self.host_labels[0]
 
@@ -142,7 +136,6 @@ class Suffixes:
         """ Return the set of all known TLDs """
         tlds = [node for node in self._suffix_trie.root.children]
         return tlds
-
 
     def tld_registries(self, counts=False):
         tld_registries = [node.registry for node in self._suffix_trie.root.children.values()]
@@ -216,22 +209,15 @@ class Suffixes:
             return None
         private_suffix = None
         tld_node = node.get_tld_node()
-        if isinstance(node, TLDInfo):
-            etld_node = tld_node
-        elif isinstance(node, SuffixInfo):
-            etld_node = node.get_effective_tld_node()
-            if node.is_private:
-                # host_labels = host_labels + [node.label]
-                private_suffix = node.suffix
-        else:
-            raise TypeError("node most be of type TLDInfo or SuffixInfo")
+        if node.is_private:
+            private_suffix = node.suffix
         return ParsedResult(
             tld_node.label,
             tld_node.puny,
             tld_node.tld_type,
             tld_node.registry,
             tld_node.create_date,
-            etld_node.suffix,
+            node.get_effective_tld_node().suffix,
             private_suffix,
             host_labels)
 
@@ -241,7 +227,8 @@ class Suffixes:
 
 
 # def run_test():
-#     suffixes = Suffixes(read_cache=False)
+#     from fqdn_parser.suffixes import Suffixes
+#     suffixes = Suffixes(read_cache=True)
 #
 #
 # def main():

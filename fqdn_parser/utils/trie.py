@@ -19,49 +19,26 @@ def is_punycode(label: str):
     return label[:4] == PUNY_PREFIX
 
 
-class Node:
-    """A node in the trie structure"""
-
-    def __init__(self, label):
-        # the suffix label for this node
+class SuffixNode:
+    def __init__(self, label, puny, tld_type, registry, create_date, suffix, is_private):
+        # the label for this node in the trie structure
         self.label = label
-
+        # punycode value of the TLD
+        self.puny = puny
+        # the type of TLD
+        self.tld_type = tld_type
+        # the registry that owns the TLD
+        self.registry = registry
+        # date the TLD was created
+        self.create_date = create_date
+        # The suffix for this node. This is the label concatenated with all parent nodes
+        self.suffix = suffix
+        # if this suffix private
+        self.is_private = is_private
         # a dictionary of child labels
         self.children = {}
         # pointer up to the parent node
         self.parent = None
-
-    def __str__(self):
-        return f"{self.label} ({len(self.children)} children)"
-
-
-class TLDInfo(Node):
-    """  """
-    def __init__(self, label, puny, tld_type, registry, create_date):
-        Node.__init__(self, label)
-        self.puny = puny
-        self.tld_type = tld_type
-        self.registry = registry
-        self.create_date = create_date
-
-    @property
-    def suffix(self):
-        return self.label
-
-    def get_tld_node(self):
-        return self
-
-    def get_effective_tld_node(self):
-        return self
-
-
-class SuffixInfo(Node):
-    """  """
-    def __init__(self, label, suffix, is_private):
-        Node.__init__(self, label)
-        self.suffix = suffix
-        self.is_private = is_private
-        # is_dynamic_dns
 
     def get_tld_node(self):
         node = self
@@ -72,24 +49,29 @@ class SuffixInfo(Node):
 
     def get_effective_tld_node(self):
         node = self
-        while isinstance(node, SuffixInfo) and node.is_private:
+        while node.is_private:
             node = node.parent
         return node
+
+    def __str__(self):
+        return f"{self.label} ({len(self.children)} children)"
 
 
 class Trie(object):
     """The trie object"""
 
     def __init__(self):
-        self.root = Node("")
+        # init trie with empty node
+        self.root = SuffixNode("", None, None, None, None, None, None)
 
-    def insert_tld_node(self, node: TLDInfo):
+    def insert_tld_node(self, label, puny, tld_type, registry, create_date):
         """Insert a tld node into the trie"""
+        node = SuffixNode(label, puny, tld_type, registry, create_date, label, False)
         # set parent and children
         node.parent = self.root
         self.root.children[node.label] = node
 
-    def insert_suffix_node(self, suffix, is_private_suffix):
+    def insert_suffix_node(self, suffix, is_private_suffix: bool):
         parent_node = self.root
         # Loop through each label in suffix in reverse order
         labels = suffix.split(".")[::-1]
@@ -100,7 +82,8 @@ class Trie(object):
             else:
                 # found a new suffix in trie
                 node_suffix = ".".join(labels[0:i + 1][::-1])
-                node = SuffixInfo(label, node_suffix, is_private_suffix)
+                node = SuffixNode(label, parent_node.puny, parent_node.tld_type, parent_node.registry,
+                                  parent_node.create_date, node_suffix, is_private_suffix)
                 # set parent and children
                 node.parent = parent_node
                 parent_node.children[label] = node
@@ -130,12 +113,16 @@ class Trie(object):
             # if puny code tld is passed in, turn it to unicode and look it up
             rev_labels[0] = puny_suffixes[rev_labels[0]]
 
-        for i, label in enumerate(rev_labels):
+        i = 0
+        for label in rev_labels:
             if label in node.children:
                 tmp = node.children[label]
-                if public_only and isinstance(tmp, SuffixInfo) and tmp.is_private:
+                if public_only and tmp.is_private:
                     # if the next node is private suffix, and we want only public then shortcut the search
                     break
+                if tmp.is_private is False:
+                    # only increment i for public suffixes
+                    i += 1
                 node = node.children[label]
             else:
                 break

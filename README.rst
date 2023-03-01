@@ -2,12 +2,37 @@
 FQDN Parser
 ===========
 
+-----------------
+Update: Feb, 2023 - Project in Flux
+-----------------
+
+I'm thinking about adding in a whole bunch of other OSINT'y functionality related to domain names. Kind of a
+one stop shop for "*get all the things about this FQDN*".
+
+Not sure what the public API will ultimately look like, but it'll probably morph a bit over the
+next few months as I add new things in.
+
+- Domain name / FQDN entropy from an actual relevant character distribution
+- WHOIS (via asyncwhois) to get Registrar and registration date, and maybe other fields
+- NameServer collection
+- x509 cert collection and parsing
+- Full URL parsing and support for other protocols (maybe)
+- *Anything else? Create an issue and I'll consider adding it*
+
+-------
+Install
+-------
+
+To install via Pypi
+
+:code:`pip install fqdn-parser`
+
 --------
 Overview
 --------
 
-FQDN Parser (Fully Qualified Domain Name Parser) is a library used to (surprise) parse FQDNs into their component parts,
-including subdomains, domain names, and the `public suffix <https://publicsuffix.org/list/public_suffix_list.dat>`_.
+FQDN Parser (Fully Qualified Domain Name Parser) is a library used to parse FQDNs into their component parts,
+including subdomains, domain names, and their `Public Suffix <https://publicsuffix.org/list/public_suffix_list.dat>`_.
 
 It also provides additional contextual metadata about the domain's TLD including:
 
@@ -33,7 +58,7 @@ arguments to the :code:`Suffixes` class constructor.
 
 Note: As of the last commit there are 9 country code TLDs listed in the Mozilla Public Suffix List that are `not` listed
 in the IANA Root Zone Database for some reason. These TLDs are added to the parsing cache file, but you will see a
-warning for each TLD
+warning for each TLD like:
 
     :code:`WARNING: 澳门 not in IANA root zone database. Adding to list of TLDs`
 
@@ -82,15 +107,6 @@ To give a concrete example of these names, take the FQDN :code:`test.integration
 
     :code:`pqdn` - test.integration.api
 
-----------------------------------------------------------------
-Doesn't tldextract do this for me? How is fqdn_parser different?
-----------------------------------------------------------------
-
-`tldextract <https://github.com/john-kurkowski/tldextract>`_ is a great library if all you need to do
-is to parse a FQDN to get it's subdomain, domain, or full suffix.
-
-But fqdn_parser adds a bit more contextual metadata about each TLD/suffix, as well as supports punycoded labels within FQDNs
-
 --------------
 Usage Examples
 --------------
@@ -103,70 +119,102 @@ Parse the registrable domain host from a FQDN:
     suffixes = Suffixes(read_cache=True)
     fqdn = "login.mail.stuffandthings.co.uk"
     result = suffixes.parse(fqdn)
-    print(result.registrable_domain_host)
+    # TLD metadata
+    print(f"tld: {result.tld}")
+    print(f"tld type: {result.tld_type}")
+    print(f"tld registry: {result.tld_registry}")
+    print(f"tld create date: {result.tld_create_date}")
+    print(f"tld punycode: {result.is_tld_punycode}")
+    print(f"is tld punycode: {result.tld_puny}")
+    print(f"effective tld: {result.effective_tld}")
+    print(f"is tld multi part: {result.is_tld_multi_part}")
+    # domain name info
+    print(f"registrable domain: {result.registrable_domain}")
+    print(f"registrable domain host: {result.registrable_domain_host}")
+    print(f"fqdn: {result.fqdn}")
+    print(f"pqdn: {result.pqdn}")
+    print(f"is fqdn (vs ip address): {result.is_fqdn}")
+    print(f"is ip (vs fqdn): {result.is_ip}")
+    # private suffix
+    print(f"private suffix: {result.private_suffix}")
+
+Results
+
+.. code-block:: bash
+
+    tld: uk
+    tld type: country-code
+    tld registry: Nominet UK
+    tld create date: 1985-07-24
+    tld punycode: False
+    is tld punycode: None
+    effective tld: co.uk
+    is tld multi part: True
+    registrable domain: stuffandthings.co.uk
+    registrable domain host: stuffandthings
+    fqdn: login.mail.stuffandthings.co.uk
+    pqdn: login.mail
+    is fqdn (vs ip address): True
+    is ip (vs fqdn): False
+    private suffix: None
 
 ----------------
 Private Suffixes
 ----------------
 
-The "Public Suffix List" (https://publicsuffix.org/list/public_suffix_list.dat) lists all known
-public domain suffixes, including both single and multi-label TLDs (.com vs .co.uk).
-
-It also has a section of "Private Suffixes". These are not considered TLDs, but instead are
-domain names privately owned by companies that people can get subdomains under. A good example
-of this are Dynamic DNS companies. For example, ``duckdns.org`` is a Dynamic DNS provider and you
-can register subdomains under ``duckdns.org``.
+The "Public Suffix List" also has a section of "Private Suffixes". These are not considered TLDs, but instead are
+domain names privately owned by companies that people can purchase or register subdomains under.
+A good example of this are Dynamic DNS providers. ``duckdns.org`` is a Dynamic DNS provider and you can
+register subdomains under ``duckdns.org``.
 
 Private Suffixes can be identified by inspecting the :code:`ParsedResult.private_suffix` property.
 
-Example:
+For example, using the above code the FQDN ``api.fake_aws_login.duckdns.org`` will return the following output:
 
-``api.fake_aws_login.duckdns.org``
+.. code-block:: bash
 
-    :code:`tld` - org
+    tld: org
+    tld type: generic
+    tld registry: Public Interest Registry (PIR)
+    tld create date: 1985-01-01
+    tld punycode: False
+    is tld punycode: None
+    effective tld: org
+    is tld multi part: False
+    registrable domain: duckdns.org
+    registrable domain host: duckdns
+    fqdn: api.fake_aws_login.duckdns.org
+    pqdn: api.fake_aws_login
+    is fqdn (vs ip address): True
+    is ip (vs fqdn): False
+    private suffix: duckdns.org
 
-    :code:`effective_tld` - org
+Some private suffixes have 3 or more labels. For example, using the private suffix ``cdn.prod.atlassian-dev.net``
+the following is the output for the FQDN ``assets.some_company.cdn.prod.atlassian-dev.net``
 
-    :code:`registrable_domain` - duckdns.org
+.. code-block:: bash
 
-    :code:`registrable_domain_host` - duckdns
+    tld: net
+    tld type: generic
+    tld registry: VeriSign Global Registry Services
+    tld create date: 1985-01-01
+    tld punycode: False
+    is tld punycode: None
+    effective tld: net
+    is tld multi part: False
+    registrable domain: atlassian-dev.net
+    registrable domain host: atlassian-dev
+    fqdn: assets.some_company.cdn.prod.atlassian-dev.net
+    pqdn: assets.some_company.cdn.prod
+    is fqdn (vs ip address): True
+    is ip (vs fqdn): False
+    private suffix: cdn.prod.atlassian-dev.net
 
-    :code:`private_suffix` - duckdns.org
+----------------------------------------------------------------
+Doesn't tldextract do this for me? How is fqdn_parser different?
+----------------------------------------------------------------
 
-    :code:`fqdn` - api.fake_aws_login.duckdns.org
+`tldextract <https://github.com/john-kurkowski/tldextract>`_ is a great library if all you need to do
+is to parse a FQDN to get it's subdomain, domain, or full suffix.
 
-    :code:`pqdn` - api.fake_aws_login
-
-A more complex example, using the private suffix ``cdn.prod.atlassian-dev.net``
-
-``assets.some_company.cdn.prod.atlassian-dev.net``
-
-    :code:`tld` - net
-
-    :code:`effective_tld` - net
-
-    :code:`registrable_domain` - atlassian-dev.net
-
-    :code:`registrable_domain_host` - atlassian-dev
-
-    :code:`private_suffix` - cdn.prod.atlassian-dev.net
-
-    :code:`fqdn` - assets.some_company.cdn.prod.atlassian-dev.net
-
-    :code:`pqdn` - assets.some_company
-
--------
-Install
--------
-
-To install via Pypi
-
-:code:`pip install fqdn-parser`
-
----------------
-To Do Wish List
----------------
-
-- A lot of the suffixes listed in https://publicsuffix.org/list/public_suffix_list.dat are not actually
-  recognized TLDs, but are suffixes used for Dynamic DNS (https://en.wikipedia.org/wiki/Dynamic_DNS).
-  At some point I'd like parse that information and to pull out Dynamic DNS suffixes from actual TLDs.
+But fqdn_parser adds a bit more contextual metadata about each TLD/suffix, as well as supports punycoded labels within FQDNs

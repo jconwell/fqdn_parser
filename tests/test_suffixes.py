@@ -88,6 +88,39 @@ def test_get_effective_tld():
     assert suffixes.get_effective_tld("stuff.nottld") is None
 
 
+def test_parse_punycodeTLD():
+    # test with unicode TLD
+    fqdn = "www.stuff.手机"
+    result = Suffixes(read_cache=True).parse(fqdn)
+    assert result.tld == "手机"
+    assert result.tld_puny == "xn--kput3i"
+    assert result.tld_type == "generic"
+    assert result.tld_registry == "Beijing RITT-Net Technology Development Co., Ltd"
+    assert result.tld_create_date == datetime.strptime('2014-06-05', '%Y-%m-%d').date()
+    assert result.effective_tld == "手机"
+    assert result.private_suffix is None
+    assert result.registrable_domain == "stuff.手机"
+    assert result.registrable_domain_host == "stuff"
+    assert result.fqdn == "www.stuff.手机"
+    assert result.pqdn == "www"
+    assert_ip(result)
+    # test with punycode TLD
+    fqdn = "www.stuff.xn--kput3i"
+    result = Suffixes(read_cache=True).parse(fqdn)
+    assert result.tld == "手机"
+    assert result.tld_puny == "xn--kput3i"
+    assert result.tld_type == "generic"
+    assert result.tld_registry == "Beijing RITT-Net Technology Development Co., Ltd"
+    assert result.tld_create_date == datetime.strptime('2014-06-05', '%Y-%m-%d').date()
+    assert result.effective_tld == "手机"
+    assert result.private_suffix is None
+    assert result.registrable_domain == "stuff.手机"
+    assert result.registrable_domain_host == "stuff"
+    assert result.fqdn == "www.stuff.手机"
+    assert result.pqdn == "www"
+    assert_ip(result)
+
+
 def test_parse_ccTLD():
     fqdn = "www.star-domain.jp"
     result = Suffixes(read_cache=True).parse(fqdn)
@@ -163,7 +196,24 @@ def test_parse_multi_label_tld():
     assert_ip(result)
 
 
-def test_parse_private_multi_label_tld():
+def test_parse_private_suffix():
+    fqdn = "fake-apple-login.duckdns.org"
+    result = Suffixes(read_cache=True).parse(fqdn)
+    assert result.tld == "org"
+    assert result.tld_puny is None
+    assert result.tld_type == "generic"
+    assert result.tld_registry == "Public Interest Registry (PIR)"
+    assert result.tld_create_date == datetime.strptime('1985-01-01', '%Y-%m-%d').date()
+    assert result.effective_tld == "org"
+    assert result.private_suffix == "duckdns.org"
+    assert result.registrable_domain == "duckdns.org"
+    assert result.registrable_domain_host == "duckdns"
+    assert result.fqdn == "fake-apple-login.duckdns.org"
+    assert result.pqdn == "fake-apple-login"
+    assert_ip(result)
+
+
+def test_parse_private_suffix_multi_pqdn():
     fqdn = "api.fake-apple-login.duckdns.org"
     result = Suffixes(read_cache=True).parse(fqdn)
     assert result.tld == "org"
@@ -173,14 +223,14 @@ def test_parse_private_multi_label_tld():
     assert result.tld_create_date == datetime.strptime('1985-01-01', '%Y-%m-%d').date()
     assert result.effective_tld == "org"
     assert result.private_suffix == "duckdns.org"
-    assert result.registrable_domain == "fake-apple-login.duckdns.org"
-    assert result.registrable_domain_host == "fake-apple-login"
+    assert result.registrable_domain == "duckdns.org"
+    assert result.registrable_domain_host == "duckdns"
     assert result.fqdn == "api.fake-apple-login.duckdns.org"
-    assert result.pqdn == "api"
+    assert result.pqdn == "api.fake-apple-login"
     assert_ip(result)
 
 
-def test_parse_private_gt2_label_tld():
+def test_parse_gt2_label_private_suffix():
     """ test for private multi label suffixes: s3.dualstack.ap-southeast-1.amazonaws.com """
     fqdn = "stuff.things.something.s3.dualstack.ap-southeast-1.amazonaws.com"
     result = Suffixes(read_cache=True).parse(fqdn)
@@ -191,10 +241,28 @@ def test_parse_private_gt2_label_tld():
     assert result.tld_create_date == datetime.strptime('1985-01-01', '%Y-%m-%d').date()
     assert result.effective_tld == "com"
     assert result.private_suffix == "s3.dualstack.ap-southeast-1.amazonaws.com"
-    assert result.registrable_domain == "something.s3.dualstack.ap-southeast-1.amazonaws.com"
-    assert result.registrable_domain_host == "something"
+    assert result.registrable_domain == "amazonaws.com"
+    assert result.registrable_domain_host == "amazonaws"
     assert result.fqdn == "stuff.things.something.s3.dualstack.ap-southeast-1.amazonaws.com"
-    assert result.pqdn == "stuff.things"
+    assert result.pqdn == "stuff.things.something.s3.dualstack.ap-southeast-1"
+    assert_ip(result)
+
+
+def test_parse_private_suffix_with_multilabel_tld():
+    """ Bytemark Hosting in the UK """
+    fqdn = "fake-apple-login.vm.bytemark.co.uk"
+    result = Suffixes(read_cache=True).parse(fqdn)
+    assert result.tld == "uk"
+    assert result.tld_puny is None
+    assert result.tld_type == "country-code"
+    assert result.tld_registry == "Nominet UK"
+    assert result.tld_create_date == datetime.strptime('1985-07-24', '%Y-%m-%d').date()
+    assert result.effective_tld == "co.uk"
+    assert result.private_suffix == "vm.bytemark.co.uk"
+    assert result.registrable_domain == "bytemark.co.uk"
+    assert result.registrable_domain_host == "bytemark"
+    assert result.fqdn == "fake-apple-login.vm.bytemark.co.uk"
+    assert result.pqdn == "fake-apple-login.vm"
     assert_ip(result)
 
 
