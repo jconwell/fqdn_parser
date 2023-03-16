@@ -154,15 +154,3 @@ def load_char_probabilities(cache_path="char_probs.cache"):
         return CharProbabilities(domain_char_probs, fqdn_char_probs)
     else:
         raise FileNotFoundError("The file char_probs.cache was not found. Please run update_char_probabilities to build new probabilities cache file")
-
-
-def main():
-    from fqdn_parser.suffixes import Suffixes
-    suffixes = Suffixes()
-    update_char_probabilities(suffixes)
-    char_probs = load_char_probabilities()
-    print(char_probs)
-
-
-if __name__ == "__main__":
-    main()

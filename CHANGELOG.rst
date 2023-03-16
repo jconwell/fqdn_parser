@@ -72,3 +72,11 @@ Minor Changes:
 - Significant refactor / restructure of the code directory to organize helper modules better.
 - Removed skeleton.py as I don't think a CLI version is useful. This can be revisited later if needed
 - Added more unit tests (yay!)
+
+Version 2.1
+===========
+
+Domain Name & FQDN Entropy
+--------------------------
+
+- Added module to calculate entropy for domain names and FQDNs using a correct and up to date character probability distribution.

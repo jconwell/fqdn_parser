@@ -49,9 +49,9 @@ def test_domain_entropy_different_base(char_probs, suffixes):
 
 
 def test_fqdn_entropy(char_probs, suffixes):
-    result = suffixes.parse("stuff.things.amazon.com.com")
+    result = suffixes.parse("stuff.things.amazon.com")
     entropy = fqdn_entropy(result, char_probs)
-    assert entropy == pytest.approx(1.104753)
+    assert entropy == pytest.approx(1.276325)
 
 
 def test_fqdn_entropy_on_domain_name(char_probs, suffixes):
@@ -64,6 +64,6 @@ def test_fqdn_entropy_on_domain_name(char_probs, suffixes):
 
 def test_fqdn_entropy_different_base(char_probs, suffixes):
     # test different log base
-    result = suffixes.parse("stuff.things.amazon.com.com")
+    result = suffixes.parse("stuff.things.amazon.com")
     entropy = fqdn_entropy(result, char_probs, 10)
-    assert entropy == pytest.approx(0.332564)
+    assert entropy == pytest.approx(0.384212)
