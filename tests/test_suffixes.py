@@ -189,6 +189,7 @@ def test_parse_multi_label_tld():
     assert result.tld_create_date == datetime.strptime('1985-07-24', '%Y-%m-%d').date()
     assert result.effective_tld == "co.uk"
     assert result.private_suffix is None
+    assert result.is_private_suffix is False
     assert result.registrable_domain == "stuffandthings.co.uk"
     assert result.registrable_domain_host == "stuffandthings"
     assert result.fqdn == "www.stuffandthings.co.uk"
@@ -206,6 +207,7 @@ def test_parse_private_suffix():
     assert result.tld_create_date == datetime.strptime('1985-01-01', '%Y-%m-%d').date()
     assert result.effective_tld == "org"
     assert result.private_suffix == "duckdns.org"
+    assert result.is_private_suffix is True
     assert result.registrable_domain == "duckdns.org"
     assert result.registrable_domain_host == "duckdns"
     assert result.fqdn == "fake-apple-login.duckdns.org"

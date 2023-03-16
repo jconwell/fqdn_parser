@@ -98,6 +98,10 @@ class ParsedResult:
     def is_tld_punycode(self) -> bool:
         return self.tld_puny is not None
 
+    @property
+    def is_private_suffix(self) -> bool:
+        return self.private_suffix is not None
+
     def ascii_ify_tld(self) -> str:
         if self.is_tld_punycode:
             return ascii_ify_puny(self.tld_puny)
