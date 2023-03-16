@@ -2,9 +2,9 @@
 FQDN Parser
 ===========
 
------------------
+-------------------
 Update: March, 2023
------------------
+-------------------
 
 I'm thinking about adding in a whole bunch of other OSINT'y functionality related to domain names. Kind of a
 one stop shop for "*get all the things about this FQDN*".
