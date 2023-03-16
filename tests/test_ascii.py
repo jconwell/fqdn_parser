@@ -1,5 +1,5 @@
 import pytest
-from utils import ascii_ify
+from fqdn_parser.utils import ascii_ify
 
 __author__ = "John Conwell"
 __copyright__ = "John Conwell"

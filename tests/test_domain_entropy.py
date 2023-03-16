@@ -1,7 +1,7 @@
 import pytest
 
-from entropy.char_probabilities import load_char_probabilities, update_char_probabilities
-from entropy.domain_entropy import domain_entropy, fqdn_entropy
+from fqdn_parser.entropy.char_probabilities import load_char_probabilities, update_char_probabilities
+from fqdn_parser.entropy.domain_entropy import domain_entropy, fqdn_entropy
 from fqdn_parser.suffixes import Suffixes
 
 __author__ = "John Conwell"

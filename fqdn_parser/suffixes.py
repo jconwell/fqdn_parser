@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 from fqdn_parser.utils.suffix_parser import build_suffixes
 from fqdn_parser.utils.trie import save_trie, load_trie
-from utils.ascii_ify import ascii_ify_puny
+from fqdn_parser.utils.ascii_ify import ascii_ify_puny
 
 __author__ = "John Conwell"
 __copyright__ = "John Conwell"
@@ -228,8 +228,12 @@ class Suffixes:
 
 # def run_test():
 #     from fqdn_parser.suffixes import Suffixes
-#     suffixes = Suffixes(read_cache=True)
-#
+#     new_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_new.cache")
+#     old_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_old.cache")
+#     new_tlds = set(new_suffixes.get_all_tlds())
+#     old_tlds = set(old_suffixes.get_all_tlds())
+#     delta = old_tlds - new_tlds
+#     print(delta)
 #
 # def main():
 #     run_test()

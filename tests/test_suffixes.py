@@ -24,7 +24,7 @@ def test_get_all_tlds():
     """ return the set of all IANA registered TLDs (as of Feb, 2023) """
     suffixes = Suffixes(read_cache=True)
     tlds = suffixes.get_all_tlds()
-    assert len(tlds) >= 1491
+    assert len(tlds) >= 1490
 
 
 def test_tld_registries():
@@ -51,7 +51,7 @@ def test_get_tld_dataframe():
     """ test Pandas dataframe of all TLDs """
     suffixes = Suffixes(read_cache=True)
     df = suffixes.get_tld_dataframe()
-    assert df.shape == (1491, 5)
+    assert df.shape == (1490, 5)
 
 
 def test_get_tld():

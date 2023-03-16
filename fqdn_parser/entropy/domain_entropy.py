@@ -1,6 +1,6 @@
 import math
 from collections import Counter
-from entropy.char_probabilities import CharProbabilities, _get_reg_domain, _clean_fqdn
+from fqdn_parser.entropy.char_probabilities import CharProbabilities, _get_reg_domain, _clean_fqdn
 from fqdn_parser.suffixes import ParsedResult
 
 __author__ = "John Conwell"
