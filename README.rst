@@ -22,7 +22,7 @@ Install
 
 To install via Pypi
 
-:code:`pip install fqdn-parser`
+:code:`pip install fqdn_parser==2.1.6`
 
 --------
 Overview
@@ -162,7 +162,7 @@ domain names privately owned by companies that people can purchase or register s
 A good example of this are Dynamic DNS providers. ``duckdns.org`` is a Dynamic DNS provider and you can
 register subdomains under ``duckdns.org``.
 
-Private Suffixes can be identified by inspecting the :code:`ParsedResult.private_suffix` property.
+Private Suffixes can be identified by checking the :code:`ParsedResult.is_private_suffix` property. To see the value of the private suffix use :code:`ParsedResult.private_suffix`.
 
 For example, using the above code the FQDN ``api.fake_aws_login.duckdns.org`` will return the following output:
 
