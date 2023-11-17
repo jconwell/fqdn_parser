@@ -13,7 +13,7 @@ SUFFIX_LIST_URL = "https://publicsuffix.org/list/public_suffix_list.dat"
 
 # manually parse all IANA TLD pages and pulled registration dates. This takes quite a while to do
 # so shipping this resource file with the source
-tld_reg_date_resource = "tld_reg_dates_v1.txt"
+tld_reg_date_resource = "tld_reg_dates_v2.txt"
 
 PUNY_PREFIX = "xn--"
 

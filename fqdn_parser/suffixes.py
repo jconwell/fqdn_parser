@@ -22,7 +22,9 @@ SUFFIX_LIST_URL = "https://publicsuffix.org/list/public_suffix_list.dat"
 
 # manually parse all IANA TLD pages and pulled registration dates. This takes quite a while to do
 # so shipping this resource file with the source
-tld_reg_date_resource = "tld_reg_dates_v1.txt"
+tld_reg_date_version = "v2"
+tld_reg_date_resource = f"tld_reg_dates_{tld_reg_date_version}.txt"
+suffix_data_cache_file = f"suffix_data_{tld_reg_date_version}.cache"
 
 ipv4_pattern = re.compile(r'^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$')
 ipv6_pattern = re.compile(r'(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))')
@@ -114,7 +116,7 @@ class ParsedResult:
 
 
 class Suffixes:
-    def __init__(self, read_cache=True, save_cache=True, cache_path="suffix_data.cache"):
+    def __init__(self, read_cache=True, save_cache=True, cache_path=suffix_data_cache_file):
         if read_cache and cache_path and os.path.exists(cache_path):
             _logger.info("loading suffix data from cache")
             suffix_trie, puny_suffixes = load_trie(cache_path)
@@ -230,18 +232,32 @@ class Suffixes:
         return ParsedResult(None, None, None, None, None, None, None, [ip], is_ipv4, not is_ipv4)
 
 
-# def run_test():
-#     from fqdn_parser.suffixes import Suffixes
-#     new_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_new.cache")
-#     old_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_old.cache")
-#     new_tlds = set(new_suffixes.get_all_tlds())
-#     old_tlds = set(old_suffixes.get_all_tlds())
-#     delta = old_tlds - new_tlds
-#     print(delta)
-#
-# def main():
-#     run_test()
-#
-#
-# if __name__ == "__main__":
-#     main()
+def run_test():
+    from fqdn_parser.suffixes import Suffixes
+    domain_suffixes = Suffixes(read_cache=True)
+    # new_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_new.cache")
+    # old_suffixes = Suffixes(read_cache=True, cache_path="suffix_data_old.cache")
+    # new_tlds = set(new_suffixes.get_all_tlds())
+    # old_tlds = set(old_suffixes.get_all_tlds())
+    # delta = old_tlds - new_tlds
+    # print(delta)
+    # result = suffixes.parse("not a fqdn")
+
+    fqdn = "aol.notld"
+    fqdn = "aol.notld.com"
+    result = domain_suffixes.parse(fqdn)
+    if result:
+        base_domain = result.registrable_domain
+    else:
+        print(f"failed to parse {fqdn}")
+
+    # result = suffixes.parse("aol.c0m")
+    print(result)
+
+
+def main():
+    run_test()
+
+
+if __name__ == "__main__":
+    main()

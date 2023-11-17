@@ -80,3 +80,11 @@ Domain Name & FQDN Entropy
 --------------------------
 
 - Added module to calculate entropy for domain names and FQDNs using a correct and up to date character probability distribution.
+
+Version 2.2
+===========
+
+Updated TLD list from ICANN
+--------------------------
+
+- Updated the TLD registration date cache file. Total number of registered TLDs went from 1,506 in Feb 2023 down to 1,458 in Nov 2023.

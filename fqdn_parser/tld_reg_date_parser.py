@@ -1,3 +1,5 @@
+import random
+import os
 import re
 import time
 import requests
@@ -19,11 +21,21 @@ revoked_tld = "Not assigned"
 reg_date_pattern = re.compile(r'.+Registration date \d{4}-\d{2}-\d{2}.+')
 
 
-def collect_tld_reg_dates(writer):
-    response = requests.get(tld_list_url)
-    if response.status_code != 200:
-        raise Exception(f"{tld_list_url} error {response.status_code}")
+def get_http_response(url, attempts=3, backoff=2):
+    for i in range(attempts):
+        try:
+            response = requests.get(url)
+            if response.status_code != 200:
+                raise Exception(f"{url} error {response.status_code}")
+            return response
+        except Exception as e:
+            print(f"Error getting {url}: {e}, attempt {i}")
+            time.sleep(1 * backoff)
+    raise Exception(f"Unable to get {url} after {attempts} attempts")
 
+
+def collect_tld_reg_dates(writer, cache):
+    response = get_http_response(tld_list_url)
     soup = BeautifulSoup(response.content, 'html.parser')
     table = soup.find("table", class_="iana-table", id="tld-table")
     table = table.find("tbody")
@@ -37,27 +49,27 @@ def collect_tld_reg_dates(writer):
         delegation_link = delegation_link_prefix + link["href"]
         # this is brittle, but parsing out the right to left and L2R unicode chars
         tld = link.text.replace(".", "").replace('‏', '').replace('‎', '')
-        # parse the TLD registry
-        registry = data[2].text
-        # only collect active TLDs
-        if registry != revoked_tld:
-            reg_date = collect_tld_reg_date(tld, delegation_link)
-            writer.write(f"{tld},{reg_date}\n")
-            # flush after each TLD just to be sure we get the line and don't have to reparse that page
-            writer.flush()
-            # let's not make IANA mad
-            time.sleep(1)
-            if i % 60 == 0:
+        if tld not in cache:
+            # parse the TLD registry
+            registry = data[2].text
+            # only collect active TLDs
+            if registry != revoked_tld:
+                reg_date = collect_tld_reg_date(tld, delegation_link)
+                writer.write(f"{tld},{reg_date}\n")
+                # flush after each TLD just to be sure we get the line and don't have to reparse that page
+                writer.flush()
+                # let's not make IANA mad
+                time.sleep(random.randint(1, 4))
+                # if i % 60 == 0:
                 print(f"Registration date for TLD '{tld}' is {reg_date} ({i} of {len(tld_rows)})")
+            else:
+                print(f"Skipping TLD '{tld}' because it was revoked")
         else:
-            print(f"Skipping TLD '{tld}' because it was revoked")
+            print(f"Skipping TLD '{tld}'")
 
 
 def collect_tld_reg_date(tld, delegation_link):
-    response = requests.get(delegation_link)
-    if response.status_code != 200:
-        raise Exception(f"{tld_list_url} error {response.status_code}")
-
+    response = get_http_response(delegation_link)
     reg_date = None
     soup = BeautifulSoup(response.content, 'html.parser')
     lines = soup.find_all("i", string=reg_date_pattern)
@@ -75,10 +87,18 @@ def collect_tld_reg_date(tld, delegation_link):
 
 
 def main():
-    version = "v1"
+    version = "v2"
     tld_reg_date_path = f"tld_reg_dates_{version}.txt"
-    with open(tld_reg_date_path, "w") as handle:
-        collect_tld_reg_dates(handle)
+    cache = {}
+    if os.path.exists(tld_reg_date_path):
+        with open(tld_reg_date_path, "r") as handle:
+            for line in handle.readlines():
+                parts = line.strip().split(",")
+                tld = parts[0]
+                reg_date = parts[1]
+                cache[tld] = reg_date
+    with open(tld_reg_date_path, "a") as handle:
+        collect_tld_reg_dates(handle, cache)
 
 
 if __name__ == "__main__":

@@ -2,20 +2,6 @@
 FQDN Parser
 ===========
 
--------------------
-Update: March, 2023
--------------------
-
-I'm thinking about adding in a whole bunch of other OSINT'y functionality related to domain names. Kind of a
-one stop shop for "*get all the things about this FQDN*".
-
-- x509 cert collection and parsing
-- WHOIS (via asyncwhois) to get Registrar and registration date, and maybe other fields
-- NameServer collection
-- Full URL parsing and support for other protocols (maybe)
-- DNS record collection and parsing
-- *Anything else? Create an issue and I'll consider adding it*
-
 -------
 Install
 -------
