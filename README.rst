@@ -8,7 +8,7 @@ Install
 
 To install via Pypi
 
-:code:`pip install fqdn_parser==2.1.6`
+:code:`pip install fqdn-parser==2.1.6`
 
 --------
 Overview
