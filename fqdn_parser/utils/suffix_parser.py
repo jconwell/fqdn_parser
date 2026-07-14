@@ -92,7 +92,6 @@ def _load_all_tlds(tld_create_dates):
                 _logger.warning(f"Registration date not found for TLD '{tld}' ")
             # populate tld info
             trie.insert_tld_node(tld, puny_tld, tld_type, registry, tld_reg_date)
-    print(trie)
     return trie
 
 
