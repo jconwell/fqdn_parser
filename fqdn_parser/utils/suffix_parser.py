@@ -33,24 +33,25 @@ def build_suffixes():
 
 
 def _load_tld_create_dates():
-    """ This resource file was created by parsing the individual IANA TLD pages. This takes way to long
+    """This resource file was created by parsing the individual IANA TLD pages. This takes way to long
     to do every time the TLD data cache is being rebuilt (and I don't want to piss IANA off), so
     I'm running this periodically and will update the source as new TLDs are created.
     """
     import importlib.resources
     import fqdn_parser as fp
+
     with importlib.resources.path(fp, tld_reg_date_resource) as resource:
-        with open(resource, 'r') as handle:
+        with open(resource, "r") as handle:
             lines = handle.readlines()
     tld_create_dates = {}
     for line in lines:
         parts = line.strip().split(",")
-        tld_create_dates[parts[0]] = datetime.strptime(parts[1], '%Y-%m-%d').date()
+        tld_create_dates[parts[0]] = datetime.strptime(parts[1], "%Y-%m-%d").date()
     return tld_create_dates
 
 
 def _load_all_tlds(tld_create_dates):
-    """ Load all known TLDs from iana. The html page has the TLD
+    """Load all known TLDs from iana. The html page has the TLD
     type and the registry information so I have to parse the html to get the info.
     Yup, totally know this is brittle.
     """
@@ -62,8 +63,8 @@ def _load_all_tlds(tld_create_dates):
     if response.status_code != 200:
         raise Exception(f"{TLD_LIST_URL} error {response.status_code}")
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-    table = soup.find("table", class_="iana-table", id="tld-table")
+    soup = BeautifulSoup(response.content, "html.parser")
+    table = soup.find("table", id="tld-table")
     table = table.find("tbody")
     tld_rows = table.find_all("tr")
     for tld_row in tld_rows:
@@ -73,7 +74,7 @@ def _load_all_tlds(tld_create_dates):
         # parse out tld and delegation record link
         link = data[0].find("a")
         # this is brittle, but parsing out the right to left and L2R unicode chars
-        tld = link.text.replace(".", "").replace('‏', '').replace('‎', '')
+        tld = link.text.replace(".", "").replace("‏", "").replace("‎", "")
         # parse the TLD type
         tld_type = data[1].text
         # parse the TLD registry
@@ -95,14 +96,20 @@ def _load_all_tlds(tld_create_dates):
 
 
 def _load_manual_tlds(_suffix_trie: Trie):
-    """ Add in any extra TLDs manually """
+    """Add in any extra TLDs manually"""
     # add in the onion TLD manually
     tld = "onion"
-    _suffix_trie.insert_tld_node(tld, None, "host_suffix", "Tor", datetime.strptime("2015-09-15", '%Y-%m-%d').date())
+    _suffix_trie.insert_tld_node(
+        tld,
+        None,
+        "host_suffix",
+        "Tor",
+        datetime.strptime("2015-09-15", "%Y-%m-%d").date(),
+    )
 
 
 def _enrich_tld_suffixes(_suffix_trie: Trie):
-    """ Pull in all known public suffixes
+    """Pull in all known public suffixes
     TODO: A lot of these are not considered multi label TLDs, like "co.uk", but instead are suffixes used
           by dynamic DNS providers. I need to figure out a way to differentiate the two and add dynamic dns
           as property on a suffix.
@@ -110,7 +117,7 @@ def _enrich_tld_suffixes(_suffix_trie: Trie):
     response = requests.get(SUFFIX_LIST_URL)
     if response.status_code != 200:
         raise Exception(f"{SUFFIX_LIST_URL} error {response.status_code}")
-    suffix_list = response.content.decode('utf-8')
+    suffix_list = response.content.decode("utf-8")
     suffix_list = suffix_list.split("\n")
 
     # add each sub suffix to its parent TLD
@@ -136,11 +143,13 @@ def _enrich_tld_suffixes(_suffix_trie: Trie):
             # There are 9 IDN TLDs in the suffix list that are NOT listed in the iana root zone database
             # - so adding them here (they are all country code IDN TLDs)
             if _suffix_trie.get_node([suffix]) is None:
-                print(f"WARNING: Suffix '{suffix}' found in Public Suffix List is not in IANA root zone database. Manually adding suffix to list of root TLDs")
+                print(
+                    f"WARNING: Suffix '{suffix}' found in Public Suffix List is not in IANA root zone database. Manually adding suffix to list of root TLDs"
+                )
                 # parse out the puny code from the previous line if possible
                 previous_line = suffix_list[i - 1]
                 puny = None
                 if "// xn--" in previous_line:
                     puny = previous_line[3:]
-                    puny = puny[:puny.index(" ")]
+                    puny = puny[: puny.index(" ")]
                 _suffix_trie.insert_tld_node(suffix, puny, "country-code", None, None)
